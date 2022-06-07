@@ -9,6 +9,7 @@ const auth = getAuth(app);
 function App() {
   const [email, setEmail] = useState(' ')
   const [pass, setPass] = useState(' ')
+  const [validated, setValidated] = useState(false);
 // Email value triger
 const handleonBlurEmail = e =>{
   setEmail(e.target.value);
@@ -17,7 +18,14 @@ const handleonBlurEmail = e =>{
 const handleonBlurPass = e =>{
   setPass(e.target.value);
 }
-const handleOnSubmit = e =>{
+const handleOnSubmit = event =>{
+  // submit validated
+  const form = event.currentTarget;
+  if (form.checkValidity() === false) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  setValidated(true);
   // console.log('Form submitted', 'Email:', email, 'Password:' ,pass);
   createUserWithEmailAndPassword(auth, email, pass)
   .then(result=>{
@@ -29,29 +37,36 @@ const handleOnSubmit = e =>{
     const errorMessage = error.message;
     console.error(errorCode, errorMessage);
   })
-  e.preventDefault();
+  event.preventDefault();
 }
 
 
   return (
-    <div onSubmit={handleOnSubmit}>
+    <div>
       <h1 style={{textAlign:'center'}}>Registration with User Password Login</h1>
       <div className="w-50 mx-auto mt-5 border border-info p-4">
-        <Form>
+        <Form noValidate validated={validated} onSubmit={handleOnSubmit}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
-            <Form.Control onBlur={handleonBlurEmail} type="email" placeholder="Enter email" />
+            <Form.Control onBlur={handleonBlurEmail} type="email" placeholder="Enter email" required />
             <Form.Text className="text-muted">
               We'll never share your email with anyone else.
             </Form.Text>
+            <Form.Control.Feedback type="invalid">
+              Please choose a Email.
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formBasicPassword">
             <Form.Label>Password</Form.Label>
-            <Form.Control onBlur={handleonBlurPass} type="password" placeholder="Password" />
+            <Form.Control onBlur={handleonBlurPass} type="password" placeholder="Password" required/>
+            <Form.Control.Feedback type="invalid">
+              Please choose a Password.
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
             <Form.Check type="checkbox" label="Check me out" />
+            
           </Form.Group>
           <Button variant="primary" type="submit">
             Submit
