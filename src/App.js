@@ -1,5 +1,12 @@
 import "./App.css";
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import app from "./firebase.init";
 import { Button, Form } from "react-bootstrap";
 import { useState } from "react";
@@ -9,9 +16,15 @@ const auth = getAuth(app);
 function App() {
   const [email, setEmail] = useState(" ");
   const [error, setError] = useState(" ");
+  const [name, setName] = useState(" ");
   const [pass, setPass] = useState(" ");
   const [registered, setRegistered] = useState(false);
   const [validated, setValidated] = useState(false);
+  // User value triger
+  const handleOnBlurUsername = (e) => {
+    setName(e.target.value);
+    // password triger
+  };
   // Email value triger
   const handleonBlurEmail = (e) => {
     setEmail(e.target.value);
@@ -47,6 +60,8 @@ function App() {
           console.log(user);
           setEmail(" ");
           setError(" ");
+          setUserName();
+          emailVerify();
         })
         .catch((error) => {
           console.log(error);
@@ -54,20 +69,53 @@ function App() {
         });
     } else {
       signInWithEmailAndPassword(auth, email, pass)
-  .then((userCredential) => {
-    // Signed in 
-    const user = userCredential.user;
-    console.log(user);
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          console.log(user);
+
+          // ...
+        })
+        .catch((error) => {
+          setError(error.message);
+          console.log(error);
+        });
+    }
+    event.preventDefault();
+  };
+  const setUserName =()=>{
+    updateProfile(auth.currentUser, {
+      displayName: name
+    }).then(() => {
+      // Profile updated!
+      console.log(`Updating name`);
+      
+    }).catch((error) => {
+      // An error occurred
+      console.log(error);
+      
+    });
+  }
+  const emailVerify = () => {
+    sendEmailVerification(auth.currentUser)
+    .then(() => {
+      // Email verification sent!
+      // ...
+    });
+  };
+  const handlePasswordReset =() =>{
+    sendPasswordResetEmail(auth, email)
+  .then(() => {
+    // Password reset email sent!
+    console.log(`Email Sent`);
     
-    // ...
   })
   .catch((error) => {
     console.log(error);
     
+    // ..
   });
-    }
-    event.preventDefault();
-  };
+  }
 
   return (
     <div>
@@ -76,7 +124,22 @@ function App() {
       </h1>
       <div className="w-50 mx-auto mt-5 border border-info p-4">
         <Form noValidate validated={validated} onSubmit={handleOnSubmit}>
-          <Form.Group className="mb-3" controlId="formBasicEmail">
+
+{/* User Name */}
+{ !registered && <Form.Group className="mb-3" controlId="formBasicUser">
+            <Form.Label>User name</Form.Label>
+            <Form.Control
+              onBlur={handleOnBlurUsername}
+              type="text"
+              placeholder="Enter your name"
+              required
+            />
+            <Form.Control.Feedback type="invalid">
+              Please choose a Email.
+            </Form.Control.Feedback>
+          </Form.Group>}
+{/* Email */}
+        <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
             <Form.Control
               onBlur={handleonBlurEmail}
@@ -91,7 +154,7 @@ function App() {
               Please choose a Email.
             </Form.Control.Feedback>
           </Form.Group>
-
+{/* password */}
           <Form.Group className="mb-3" controlId="formBasicPassword">
             <Form.Label>Password</Form.Label>
             <Form.Control
@@ -112,6 +175,8 @@ function App() {
             />
           </Form.Group>
           <p className="text-danger">{error}</p>
+          <button onClick={handlePasswordReset} variant='link' >Forget Password? </button>
+          <br />
           <Button variant="primary" type="submit">
             {registered ? "Login" : "Registration"}
           </Button>
