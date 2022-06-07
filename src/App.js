@@ -8,7 +8,9 @@ const auth = getAuth(app);
 
 function App() {
   const [email, setEmail] = useState(' ')
+  const [error, setError] =useState(' ');
   const [pass, setPass] = useState(' ')
+  const [registered, setRegistered] =useState(false);
   const [validated, setValidated] = useState(false);
 // Email value triger
 const handleonBlurEmail = e =>{
@@ -18,32 +20,44 @@ const handleonBlurEmail = e =>{
 const handleonBlurPass = e =>{
   setPass(e.target.value);
 }
+const handleOnchangeRegistered = event => {
+  setRegistered(event.target.checked)
+}
 const handleOnSubmit = event =>{
+  event.preventDefault();
   // submit validated
   const form = event.currentTarget;
   if (form.checkValidity() === false) {
-    event.preventDefault();
     event.stopPropagation();
+    // write 'return' to prevent sending this error to firebase
+    return;
+  }
+  // validation condition
+  if(!/[0-9]/.test(pass)){
+      setError('Password Should Contains Minimum  One digit!');
+      return;
   }
   setValidated(true);
+  setError(' ');
   // console.log('Form submitted', 'Email:', email, 'Password:' ,pass);
   createUserWithEmailAndPassword(auth, email, pass)
   .then(result=>{
     const user = result.user;
     console.log(user);
+    setEmail(' ');
+    setError(' ');
   })
   .catch(error=>{
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    console.error(errorCode, errorMessage);
+    console.log(error);
+    setError(error.message);
   })
-  event.preventDefault();
+  // event.preventDefault();
 }
 
 
   return (
     <div>
-      <h1 style={{textAlign:'center'}}>Registration with User Password Login</h1>
+      <h1 style={{textAlign:'center'}}>Please {registered ? 'Login' : 'Registration'} !</h1>
       <div className="w-50 mx-auto mt-5 border border-info p-4">
         <Form noValidate validated={validated} onSubmit={handleOnSubmit}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -65,11 +79,11 @@ const handleOnSubmit = event =>{
             </Form.Control.Feedback>
           </Form.Group>
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
-            <Form.Check type="checkbox" label="Check me out" />
-            
-          </Form.Group>
+            <Form.Check onChange={handleOnchangeRegistered} type="checkbox" label="If you Already Registered - Click me to Log in" />
+             </Form.Group>
+             <p className="text-danger">{error}</p>
           <Button variant="primary" type="submit">
-            Submit
+            {registered ? 'Login' :'Registration'}
           </Button>
         </Form>
       </div>
